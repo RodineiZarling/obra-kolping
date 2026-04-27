@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Models\Concerns\AppliesEmpresaScope;
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Acolhimento extends Model
 {
-    use HasFactory, AppliesEmpresaScope;
+    use HasFactory, AppliesEmpresaScope, HasDocuments;
 
     protected $table = 'acolhimentos';
 
@@ -24,16 +25,10 @@ class Acolhimento extends Model
         'descricao_situacao',
         'status',
         'observacoes',
-        'composicao_familiar',
-        'procedimentos',
-        'diario_acompanhamento',
     ];
 
     protected $casts = [
         'data_acolhimento' => 'date',
-        'composicao_familiar' => 'array',
-        'procedimentos' => 'array',
-        'diario_acompanhamento' => 'array',
     ];
 
     public function empresa(): BelongsTo
@@ -51,8 +46,21 @@ class Acolhimento extends Model
         return $this->belongsTo(User::class, 'responsavel_id');
     }
 
-    public function documents(): MorphMany
+    // Relacionamentos normalizados
+    public function familiares(): HasMany
     {
-        return $this->morphMany(Document::class, 'documentable');
+        return $this->hasMany(AcolhimentoFamiliar::class);
     }
+
+    public function procedimentos(): HasMany
+    {
+        return $this->hasMany(AcolhimentoProcedimento::class);
+    }
+
+    public function diarios(): HasMany
+    {
+        return $this->hasMany(AcolhimentoDiario::class);
+    }
+
+    // Trait HasDocuments fornece o relacionamento documents() e o diretório padrão
 }

@@ -25,6 +25,24 @@ class DocumentsRelationManager extends RelationManager
 
     protected static ?string $title = 'Documentos';
 
+    private function hasPerm(string $action): bool
+    {
+        $owner = $this->getOwnerRecord();
+        if ($owner instanceof \App\Models\Acolhimento) {
+            return \App\Filament\Resources\AcolhimentoResource::hasActionPermission($action);
+        }
+        if ($owner instanceof \App\Models\PessoaAcolhida) {
+            return \App\Filament\Resources\PessoaAcolhidaResource::hasActionPermission($action);
+        }
+        return true;
+    }
+
+    public function isReadOnly(): bool
+    {
+        // Permite criar/excluir também na página de Visualização do registro pai
+        return false;
+    }
+
     public function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -93,6 +111,7 @@ class DocumentsRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Anexar')
+                    ->visible(fn () => $this->hasPerm('Editar'))
                     ->using(function (array $data) {
                         /** @var TemporaryUploadedFile $file */
                         $file = $data['file'];
@@ -126,17 +145,20 @@ class DocumentsRelationManager extends RelationManager
                     ->icon('heroicon-o-eye')
                     ->url(fn (Document $record) => route('documents.view', $record))
                     ->openUrlInNewTab()
-                    ->visible(fn (Document $record) => $record->isViewable()),
+                    ->visible(fn (Document $record) => $record->isViewable() && $this->hasPerm('Visualizar')),
                 Action::make('download')
                     ->label('Baixar')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn (Document $record) => route('documents.download', $record))
-                    ->openUrlInNewTab(),
-                DeleteAction::make(),
+                    ->openUrlInNewTab()
+                    ->visible(fn () => $this->hasPerm('Visualizar')),
+                DeleteAction::make()
+                    ->visible(fn () => $this->hasPerm('Deletar')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => $this->hasPerm('Deletar')),
                 ]),
             ]);
     }

@@ -3,10 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\AcolhimentoResource\RelationManagers\DiariosRelationManager;
+use App\Filament\Resources\AcolhimentoResource\RelationManagers\FamiliaresRelationManager;
+use App\Filament\Resources\AcolhimentoResource\RelationManagers\ProcedimentosRelationManager;
 use App\Models\Acolhimento;
 use App\Models\Empresa;
 use App\Models\PessoaAcolhida;
 use App\Models\User;
+use App\Traits\HasDynamicPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -16,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AcolhimentoResource extends Resource
 {
+    use HasDynamicPermissions;
     protected static ?string $model = Acolhimento::class;
 
     protected static ?string $navigationGroup = 'Acolhimentos';
@@ -103,53 +108,6 @@ class AcolhimentoResource extends Resource
                                 ])->default('em_andamento')->native(false),
                                 Forms\Components\Textarea::make('observacoes')->label('Observações')->rows(4),
                             ])->columns(2),
-
-                        Forms\Components\Tabs\Tab::make('Composição familiar')
-                            ->schema([
-                                Forms\Components\Repeater::make('composicao_familiar')
-                                    ->label('Composição familiar')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('nome')->label('Nome')->required(),
-                                        Forms\Components\TextInput::make('parentesco')->label('Parentesco'),
-                                        Forms\Components\TextInput::make('idade')->label('Idade')->numeric(),
-                                        Forms\Components\TextInput::make('observacoes')->label('Observações'),
-                                    ])->columns(2)
-                                    ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['nome'] ?? null),
-                            ]),
-
-                        Forms\Components\Tabs\Tab::make('Procedimentos')
-                            ->schema([
-                                Forms\Components\Repeater::make('procedimentos')
-                                    ->label('Procedimentos')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('descricao')->label('Descrição')->required(),
-                                        Forms\Components\DatePicker::make('data')->label('Data'),
-                                        Forms\Components\TextInput::make('responsavel')->label('Responsável'),
-                                        Forms\Components\TextInput::make('observacoes')->label('Observações'),
-                                    ])->columns(2)
-                                    ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['descricao'] ?? null),
-                            ]),
-
-                        Forms\Components\Tabs\Tab::make('Diário de acompanhamento')
-                            ->schema([
-                                Forms\Components\Repeater::make('diario_acompanhamento')
-                                    ->label('Diário de acompanhamento')
-                                    ->schema([
-                                        Forms\Components\DatePicker::make('data')->label('Data'),
-                                        Forms\Components\Select::make('area')->label('Área')->options([
-                                            'educacao' => 'Educação',
-                                            'assistencia_social' => 'Assistência Social',
-                                            'saude' => 'Saúde',
-                                            'outro' => 'Outro',
-                                        ])->native(false),
-                                        Forms\Components\Textarea::make('descricao')->label('Descrição'),
-                                        Forms\Components\TextInput::make('responsavel')->label('Responsável'),
-                                    ])->columns(2)
-                                    ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => ($state['data'] ?? '') . ' - ' . (($state['area'] ?? '') ?: '')),
-                            ]),
                     ])
                     ->persistTabInQueryString(),
             ]);
@@ -172,9 +130,17 @@ class AcolhimentoResource extends Resource
             ])
             ->filters([])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->visible(fn () => self::hasActionPermission('Visualizar')),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn () => self::hasActionPermission('Editar')),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn () => self::hasActionPermission('Deletar')),
+                ])
+                    ->label('Ações')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -186,6 +152,9 @@ class AcolhimentoResource extends Resource
     public static function getRelations(): array
     {
         return [
+            FamiliaresRelationManager::class,
+            ProcedimentosRelationManager::class,
+            DiariosRelationManager::class,
             DocumentsRelationManager::class,
         ];
     }

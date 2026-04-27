@@ -40,13 +40,12 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-user'),
             ])
             ->navigationGroups([
-                'Financeiro',
-                'Operações',
+                'Acolhimentos',
                 'Cadastros',
                 'Configurações',
             ])
             ->colors([
-                'primary' => Color::Red,
+                'primary' => Color::Orange,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

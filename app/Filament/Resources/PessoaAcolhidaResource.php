@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Models\Empresa;
 use App\Models\PessoaAcolhida;
+use App\Filament\RelationManagers\DocumentsRelationManager;
+use App\Traits\HasDynamicPermissions;
 use Leandrocfe\FilamentPtbrFormFields\Cep;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PessoaAcolhidaResource extends Resource
 {
+    use HasDynamicPermissions;
     protected static ?string $model = PessoaAcolhida::class;
 
     protected static ?string $navigationGroup = 'Acolhimentos';
@@ -114,9 +117,17 @@ class PessoaAcolhidaResource extends Resource
             ])
             ->filters([])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->visible(fn () => self::hasActionPermission('Visualizar')),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn () => self::hasActionPermission('Editar')),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn () => self::hasActionPermission('Deletar')),
+                ])
+                    ->label('Ações')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -137,6 +148,13 @@ class PessoaAcolhidaResource extends Resource
             'create' => PessoaAcolhidaResource\Pages\CreatePessoaAcolhida::route('/create'),
             'edit' => PessoaAcolhidaResource\Pages\EditPessoaAcolhida::route('/{record}/edit'),
             'view' => PessoaAcolhidaResource\Pages\ViewPessoaAcolhida::route('/{record}'),
+        ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            DocumentsRelationManager::class,
         ];
     }
 }

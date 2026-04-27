@@ -27,8 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->validateCsrfTokens(except: [
             'livewire/*',
-            'https://udfitness.test/*',
-            'webhooks/mercadopago',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

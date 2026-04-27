@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\AppliesEmpresaScope;
+use App\Traits\HasDocuments;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PessoaAcolhida extends Model
 {
-    use HasFactory, AppliesEmpresaScope;
+    use HasFactory, AppliesEmpresaScope, HasDocuments;
 
     protected $table = 'pessoas_acolhidas';
 
